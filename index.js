@@ -49,7 +49,7 @@ app.get("/users/:id", (req, res) => {
 });
 
 app.post("/users", (req, res) => {
-  console.log('post')
+  console.log("post");
   User.findOne({ username: req.body.username }, (err, existingUser) => {
     if (err) {
       throw err;
@@ -105,37 +105,50 @@ app.delete("/users/:id", (req, res) => {
 
 app.post("/users/:id/messages", (req, res) => {
   const accessToken = req.headers["authorization"];
-  Session.findOne({accessToken})
+  Session.findOne({ accessToken: accessToken }, (err) => {
     if (err) {
       res.status(500).send({ error: true, message: "Cannot find userId" });
     }
     res
       .status(200)
       .send({ error: false, message: "UserId was found successfully" });
-  
-  // TODO: find user id form Sessions by that access token +
-
- // delete this or response will end here
-
-  const message = new Message();
-  message.fromUser = Session.userId; // TODO: set user id here
-  message.toUser = req.params.id;
-  console.log(req.params.id);
-  message.content = req.body.content;
-
-  message.save((err) => {
-    if (err) {
-      res.status(500).send({ error: true, message: "Cannot insert message" });
-      return;
-    }
-    res
-      .status(201)
-      .send({ error: false, message: "Message sent successfully" });
+      
   });
+});
+
+
+//res.end(); // delete this or response will end here
+
+const message = new Message();
+message.fromUser = Session.userId; // TODO: set user id here
+message.toUser = req.params.id;
+console.log(req.params.id);
+message.content = req.body.content;
+
+message.save((err) => {
+  if (err) {
+    res.status(500).send({ error: true, message: "Cannot insert message" });
+    return;
+  }
+  res.status(201).send({ error: false, message: "Message sent successfully" });
 });
 
 app.get("/users/:id/messages", (req, res) => {
   // TODO: get messages by this user ID
+  Message.findOne({ fromUser }, (err) => {
+    if (err) {
+      res
+        .status(500)
+        .send({
+          error: true,
+          messsage: "cannot find messages from this userId",
+        });
+      return;
+    }
+    res
+      .status(201)
+      .send({ error: false, message: "messages was found successfully" });
+  });
 });
 
 io.on("connection", (socket) => {
